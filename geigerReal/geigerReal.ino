@@ -1,6 +1,6 @@
 const int outputPin = A3;
 const int inputPin = A2;
-const int threshold = 1000;
+const int threshold = 1000; // Analog signal strength
 
 const int sampleRate = 50;
 const int sampleCount = 1000/sampleRate;
@@ -35,8 +35,8 @@ void loop() {
       for(int i=0; i < sizeof(cpsList)/sizeof(int); i++){
         cps += cpsList[i];
       }
-      Serial.print("cps: ");
-      Serial.println(cps);
+      //Serial.print("cps: ");
+      //Serial.println(cps);
 
       cpmList[listIndexCpm] = cps;
 
@@ -54,6 +54,15 @@ void loop() {
       cpsList[listIndex] = 0;  // Store 0 for no detection
     }
 
+    // ---------- CPM
+    cpm = 0;
+    for(int i=0; i < sizeof(cpmList)/sizeof(int); i++){
+      cpm += cpmList[i];
+    }
+    Serial.print("cpm: ");
+    Serial.println(cpm);
+    analogWrite(outputPin, cpm * 4);
+
     //Serial.print("other: ");
     //Serial.println(cpsList[listIndex]);
 
@@ -63,21 +72,11 @@ void loop() {
     startTime = currentTime;  // Reset timer for next sampling period
   }
 
-  if(timesPassed >= 1200){ // every minute  60000 / sampleRate
-    cpm = 0;
-
-    for(int i=0; i < sizeof(cpmList)/sizeof(int); i++){
-      cpm += cpmList[i];
-    }
-
-    Serial.print("cpm: ");
-    Serial.println(cpm);
-
+  if(timesPassed >= 1200){
     listIndexCpm = 0;
-    
     timesPassed = 0;
-    memset(cpmList, 0, sizeof(cpmList)); // clear array
   }
+
 
   // put your main code here, to run repeatedly:
 
