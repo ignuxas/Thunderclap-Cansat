@@ -1,5 +1,5 @@
-const int outputPin = A3;
-const int inputPin = A2;
+const int outputPin = 3;
+const int inputPin = A4;
 const int threshold = 1000; // Analog signal strength
 
 const int sampleRate = 50;
@@ -43,6 +43,9 @@ void loop() {
       memset(cpsList, 0, sizeof(cpsList)); // clear array
       listIndexCpm += 1;
       listIndex = 0;
+      Serial.print("cpm: ");
+      Serial.println(cpm);
+      analogWrite(outputPin, cpm);
     }
 
     int sensorValue = analogRead(inputPin);  // Read the signal from the radiation counter
@@ -59,9 +62,6 @@ void loop() {
     for(int i=0; i < sizeof(cpmList)/sizeof(int); i++){
       cpm += cpmList[i];
     }
-    Serial.print("cpm: ");
-    Serial.println(cpm);
-    analogWrite(outputPin, cpm * 4);
 
     //Serial.print("other: ");
     //Serial.println(cpsList[listIndex]);
