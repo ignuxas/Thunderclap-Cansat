@@ -1,0 +1,16 @@
+{
+  "files": {
+    "main.css": "/ThunderC/static/css/main.b1816bdd.css",
+    "main.js": "/ThunderC/static/js/main.071ba947.js",
+    "static/js/787.8f7e54ac.chunk.js": "/ThunderC/static/js/787.8f7e54ac.chunk.js",
+    "static/media/space-short.txt": "/ThunderC/static/media/space-short.d018a974f8a9b0707a3d.txt",
+    "index.html": "/ThunderC/index.html",
+    "main.b1816bdd.css.map": "/ThunderC/static/css/main.b1816bdd.css.map",
+    "main.071ba947.js.map": "/ThunderC/static/js/main.071ba947.js.map",
+    "787.8f7e54ac.chunk.js.map": "/ThunderC/static/js/787.8f7e54ac.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.b1816bdd.css",
+    "static/js/main.071ba947.js"
+  ]
+}
