@@ -39,13 +39,13 @@ DHT_Unified dht(DHTPIN, DHTTYPE);
 MPU9250_asukiaaa mySensor;
 float aX, aY, aZ, aSqrt, gX, gY, gZ, mDirection, mX, mY, mZ;
 
-float aXoffset = 0.05;
-float aYoffset = 1.01;
-float aZoffset = -0.05;
+float aXoffset = 0;
+float aYoffset = 0.9;
+float aZoffset = -0.04;
 
-float gXoffset = 11.6;
-float gYoffset = -2.8;
-float gZoffset = -3.3;
+float gXoffset = -95;
+float gYoffset = 98;
+float gZoffset = 6;
 
 // --------------- SD Card
 #define HSPI_MISO   12 // 13
@@ -70,6 +70,11 @@ const int altDetectionNum = 5; // how many altitude readings to extend the anten
 
 // --------------- Geiger counter
 const int geigerPin = 35;
+float geigerCPM = 0;
+const int numReadings = 100; // Number of readings to store
+int readings[numReadings] = {0}; // Array to store readings
+int readIndex = 0; // Index to keep track of current position in array
+long total = 0; // Running total of readings
 
 // --------------- Other
 int DelayT = 100;
@@ -78,7 +83,7 @@ int TransmissionDelay = 0;
 std::vector<String> dataList;
 std::vector<float> altList;
 
-bool canTransmit = false;
+bool canTransmit = true;
 
 bool isDecreasing(std::vector<float> values) {
   for (int i = 0; i < values.size() - 1; i++) {
@@ -107,10 +112,10 @@ void TransmissionFunc(/*void * parameter*/) {
     dataList.clear();
     */
     if(canTransmit){
-        if(gpsData != ""){
-          if(!canTransmit) altList.push_back(extractAltitude(gpsData));
+        //if(gpsData != ""){
+          //if(!canTransmit) altList.push_back(extractAltitude(gpsData));
           e22ttl.sendFixedMessage(0, DESTINATION_ADDL, Chan, gpsData);
-        }
+        //}
     }
     //myFile.close();
 
@@ -308,6 +313,9 @@ void loop() {
     Serial.println("Cannot read gyro values " + String(result));
   }
 
+  mySensor.beginMag();
+  result = mySensor.magUpdate();
+
   gpsData = "";
   bool recievedLocation = false;
   if(gpsSerial.available()) { // GPS
@@ -327,9 +335,25 @@ void loop() {
 
   CurrentData += String(millis());
 
-  // Geiger counter
-  //const int geigerValue = analogRead(geigerPin) / 4;
-  //Serial.println(geigerValue);
+  // Geiger counter ------------------------
+  const int geigerValue = analogRead(geigerPin);
+
+  readings[readIndex] = geigerValue;
+  readIndex++;
+
+  total += geigerValue;
+
+  // Calculate average (consider using float for decimal results)
+  float average = (float)total / numReadings;
+
+  if (readIndex >= numReadings-1) {
+    readIndex = 0;
+    geigerCPM = average;
+    total = 0;
+  }
+
+  CurrentData += " " + String(geigerCPM);
+  // ------------------------
 
   if(recievedLocation){gpsData = CurrentData;}
   
