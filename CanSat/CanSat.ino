@@ -18,7 +18,7 @@
 
 // --------------- RADIO
 #define DESTINATION_ADDL 0 // SHIT AIN'T WORKING
-#define Chan 0 // SHIT AIN'T WORKING
+#define Chan 60 // SHIT AIN'T WORKING
 
 LoRa_E22 e22ttl(&Serial2, 18, 21, 19);  //  RX AUX M0 M1
 void printParameters(struct Configuration configuration);
@@ -66,12 +66,13 @@ String gpsData = ""; // this is not a setting, do not change
 unsigned long start;
 HardwareSerial gpsSerial(1);
 
+int lastAlt = 0;
 const int altDetectionNum = 5; // how many altitude readings to extend the antenna
 
 // --------------- Geiger counter
 const int geigerPin = 35;
 float geigerCPM = 0;
-const int numReadings = 100; // Number of readings to store
+const int numReadings = 30; // Number of readings to store
 int readings[numReadings] = {0}; // Array to store readings
 int readIndex = 0; // Index to keep track of current position in array
 long total = 0; // Running total of readings
@@ -83,11 +84,11 @@ int TransmissionDelay = 0;
 std::vector<String> dataList;
 std::vector<float> altList;
 
-bool canTransmit = true;
+bool canTransmit = false;
 
 bool isDecreasing(std::vector<float> values) {
-  for (int i = 0; i < values.size() - 1; i++) {
-    if (values[i] < values[i + 1]) {
+  for (int i = 0; i < values.size() - 2; i++) {
+    if (values[i]+1 < values[i + 1]) {
       return false;
     }
   }
@@ -99,7 +100,7 @@ bool isDecreasing(std::vector<float> values) {
 
 void TransmissionFunc(/*void * parameter*/) {
   //while(true){
-    /*
+    
     myFile = SD.open("/data.txt", FILE_APPEND);
     String finalString = "";
 
@@ -110,25 +111,24 @@ void TransmissionFunc(/*void * parameter*/) {
       Serial.println(dataList[i]);
     }
     dataList.clear();
-    */
+    
     if(canTransmit){
-        //if(gpsData != ""){
+        if(gpsData != ""){
           //if(!canTransmit) altList.push_back(extractAltitude(gpsData));
           e22ttl.sendFixedMessage(0, DESTINATION_ADDL, Chan, gpsData);
-        //}
+        }
     }
-    //myFile.close();
+    myFile.close();
 
     //FAILSAFE
-    //ResponseContainer rc = e22ttl.receiveMessage();
-    //if(rc.data == "FAILSAFE"){ canTransmit = true; }
+    if(gpsData != "" && !canTransmit) {
+      if(extractAltitude(gpsData) > 1000){
+        canTransmit = true;
+      }
+    }
+    if (e22ttl.available()>1 && !canTransmit) {canTransmit = true;}
     //----
     //if(!canTransmit && isDecreasing(altList)){ canTransmit = true; }
-
-    if(altList.size() >= altDetectionNum){
-      //altList.erase(altList.begin()); // delete first altitude recording
-    }
-
 
     delay(TransmissionDelay);
     //}
@@ -337,22 +337,7 @@ void loop() {
 
   // Geiger counter ------------------------
   const int geigerValue = analogRead(geigerPin);
-
-  readings[readIndex] = geigerValue;
-  readIndex++;
-
-  total += geigerValue;
-
-  // Calculate average (consider using float for decimal results)
-  float average = (float)total / numReadings;
-
-  if (readIndex >= numReadings-1) {
-    readIndex = 0;
-    geigerCPM = average;
-    total = 0;
-  }
-
-  CurrentData += " " + String(geigerCPM);
+  CurrentData += " " + String(geigerValue);
   // ------------------------
 
   if(recievedLocation){gpsData = CurrentData;}
@@ -365,7 +350,7 @@ void loop() {
   // Radio: 200 ?
   delay(DelayT); // Default: 1000
   
-  Serial.println(CurrentData);
+  //Serial.println(CurrentData);
   //Serial.println();
 }
 
