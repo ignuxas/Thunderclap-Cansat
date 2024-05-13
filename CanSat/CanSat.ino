@@ -48,10 +48,10 @@ float gYoffset = -2.8;
 float gZoffset = -3.3;
 
 // --------------- SD Card
-#define HSPI_MISO   2 // 13
-#define HSPI_MOSI   15
-#define HSPI_SCLK   14
-#define HSPI_SS     12
+#define HSPI_MISO   12 // 13
+#define HSPI_MOSI   13
+#define HSPI_SCLK   4
+#define HSPI_SS     15
 
 SPIClass *spi = NULL;
 
@@ -66,10 +66,6 @@ String gpsData = ""; // this is not a setting, do not change
 unsigned long start;
 HardwareSerial gpsSerial(1);
 
-// --------------- Motor
-const int motorPin = 27;
-const int motorDirectionPin = 26;
-
 const int altDetectionNum = 5; // how many altitude readings to extend the antenna
 
 // --------------- Geiger counter
@@ -82,11 +78,11 @@ int TransmissionDelay = 0;
 std::vector<String> dataList;
 std::vector<float> altList;
 
-bool AntennaExtended = false;
+bool canTransmit = false;
 
 bool isDecreasing(std::vector<float> values) {
   for (int i = 0; i < values.size() - 1; i++) {
-    if (values[i] <= values[i + 1]) {
+    if (values[i] < values[i + 1]) {
       return false;
     }
   }
@@ -98,10 +94,10 @@ bool isDecreasing(std::vector<float> values) {
 
 void TransmissionFunc(/*void * parameter*/) {
   //while(true){
-   // myFile = SD.open("/data.txt", FILE_APPEND);
+    /*
+    myFile = SD.open("/data.txt", FILE_APPEND);
     String finalString = "";
 
-    /*
     for(int i = 0; i < dataList.size(); i++){
       String thisString = dataList[i] + "\n";
       finalString += thisString;
@@ -110,21 +106,19 @@ void TransmissionFunc(/*void * parameter*/) {
     }
     dataList.clear();
     */
-    //Serial.println("Balls");
-    //e22ttl.sendFixedMessage(0, DESTINATION_ADDL, Chan, finalString); // transmit data
+    if(canTransmit){
+        if(gpsData != ""){
+          if(!canTransmit) altList.push_back(extractAltitude(gpsData));
+          e22ttl.sendFixedMessage(0, DESTINATION_ADDL, Chan, gpsData);
+        }
+    }
     //myFile.close();
-    if(gpsData != ""){
-      if(!AntennaExtended) altList.push_back(extractAltitude(gpsData));
-      e22ttl.sendFixedMessage(0, DESTINATION_ADDL, Chan, gpsData);
-    }
 
-
-    if(!AntennaExtended){
-      if(isDecreasing(altList)){
-        //digitalWrite(motorPin, HIGH);
-        //AntennaExtended = true;
-      }
-    }
+    //FAILSAFE
+    //ResponseContainer rc = e22ttl.receiveMessage();
+    //if(rc.data == "FAILSAFE"){ canTransmit = true; }
+    //----
+    //if(!canTransmit && isDecreasing(altList)){ canTransmit = true; }
 
     if(altList.size() >= altDetectionNum){
       //altList.erase(altList.begin()); // delete first altitude recording
@@ -201,8 +195,9 @@ void setup() {
   mySensor.beginGyro();
 
   delay(200);
-    Serial.print("setup() running on core ");
-    Serial.println(xPortGetCoreID());
+  Serial.print("setup() running on core ");
+  Serial.println(xPortGetCoreID());
+  
 
   // --------------- SD Card
   spi = new SPIClass(HSPI);
@@ -246,8 +241,6 @@ void setup() {
   }
 
   delay(500);
-  digitalWrite(motorDirectionPin, HIGH); // Idk what this does, Simon said it's needed
-  delay(200);
 
   //delay(0);
 
