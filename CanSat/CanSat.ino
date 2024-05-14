@@ -66,7 +66,6 @@ String gpsData = ""; // this is not a setting, do not change
 unsigned long start;
 HardwareSerial gpsSerial(1);
 
-int lastAlt = 0;
 const int altDetectionNum = 5; // how many altitude readings to extend the antenna
 
 // --------------- Geiger counter
@@ -128,7 +127,11 @@ void TransmissionFunc(/*void * parameter*/) {
     }
     if (e22ttl.available()>1 && !canTransmit) {canTransmit = true;}
     //----
-    //if(!canTransmit && isDecreasing(altList)){ canTransmit = true; }
+
+    if(altList.size() >= altDetectionNum){
+      altList.erase(altList.begin()); // delete first altitude recording
+    }
+
 
     delay(TransmissionDelay);
     //}
@@ -336,8 +339,19 @@ void loop() {
   CurrentData += String(millis());
 
   // Geiger counter ------------------------
+
   const int geigerValue = analogRead(geigerPin);
-  CurrentData += " " + String(geigerValue);
+  readings[readIndex] = geigerValue;
+
+  total = 0;
+  for(int i = 0; i < numReadings; i++){
+    total += readings[i];
+  }
+
+  if(readIndex >= numReadings-1){readIndex = 0;}
+
+  CurrentData += " " + String(total / numReadings);
+  readIndex++;
   // ------------------------
 
   if(recievedLocation){gpsData = CurrentData;}
