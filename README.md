@@ -5,4 +5,4 @@ https://www.youtube.com/watch?v=AwtJzvZ51m0
 
 I am currently upgrading the website shown in the video to show previous run data, upcoming launches and it should be published in about a month if I have the time.
 
-[![alt text](https://github.com/ignuxas/Thunderclap-Cansat/blob/Arduino-Main/schematics.jpeg)
+![Schematics](https://github.com/ignuxas/Thunderclap-Cansat/blob/Arduino-Main/schematics.jpeg)
