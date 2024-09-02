@@ -1,3 +1,5 @@
+# Thunderclap-Cansat v1
+
 This is the code and schematics of the Thunderclap-Cansat v1 project.
 This is not my best code and I'm not proud of it :D, it'll be better next time, I promise ;)
 
